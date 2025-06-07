@@ -1,9 +1,91 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import Image from "next/image";
+import { useState } from "react";
+
+export default function HomePage() {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [attendance, setAttendance] = useState('yes');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setStatus('loading');
+
+    try {
+      const res = await fetch('/api/rsvp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, attendance }),
+      });
+
+      if (res.ok) {
+        setStatus('success');
+        setName('');
+        setEmail('');
+        setAttendance('yes');
+      } else {
+        setStatus('error');
+      }
+    } catch {
+      setStatus('error');
+    }
+  }
+
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
+      <main className="flex flex-col gap-[32px] row-start-2 items-center text-center sm:items-start">
+        <h1 className="text-4xl font-bold text-[#155703]">
+          Alyssa & Cody's Wedding
+        </h1>
+        <p className="text-lg text-gray-700">
+          October 16th, 2025
+          <br />
+          San Francisco City Hall, 9am
+        </p>
+
+        {/* RSVP FORM START */}
+        <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto p-4">
+          <input
+            className="w-full border border-gray-300 rounded px-3 py-2"
+            placeholder="Name"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            required
+          />
+
+          <input
+            type="email"
+            className="w-full border border-gray-300 rounded px-3 py-2"
+            placeholder="Email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            required
+          />
+
+          <select
+            className="w-full border border-gray-300 rounded px-3 py-2"
+            value={attendance}
+            onChange={e => setAttendance(e.target.value)}
+          >
+            <option value="yes">Yes, I will attend</option>
+            <option value="no">No, I cannot attend</option>
+          </select>
+
+          <button
+            type="submit"
+            disabled={status === 'loading'}
+            className="bg-[#155703] text-white px-4 py-2 rounded"
+          >
+            {status === 'loading' ? 'Submitting...' : 'Submit RSVP'}
+          </button>
+
+          {status === 'success' && <p className="text-green-600">Thanks for your RSVP!</p>}
+          {status === 'error' && <p className="text-red-600">Something went wrong. Please try again.</p>}
+        </form>
+        {/* RSVP FORM END */}
+
         <Image
           className="dark:invert"
           src="/next.svg"
